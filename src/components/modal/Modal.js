@@ -1,20 +1,24 @@
 import React, {Component} from "react";
-import {createPortal} from "react-dom";
+import PropTypes from 'prop-types';
 import style from "./Modal.module.css";
+import {createPortal} from "react-dom";
 
 const modalRoot = document.querySelector('#modal-root');
 
 class Modal extends Component {
     componentDidMount(e) {
         window.addEventListener("keydown", this.onCLoseModal);
+        const body = document.querySelector("body");
+        body.style.overflow = "hidden";
     }
 
     componentWillUnmount() {
         window.removeEventListener("keydown", this.onCLoseModal);
+        const body = document.querySelector("body");
+        body.style.overflow = "auto";
     }
 
     onCLoseModal = (e) => {
-        // console.log(e.code)
         if (e.code === 'Escape') {
             this.props.onClose();
         }
@@ -36,7 +40,10 @@ class Modal extends Component {
             modalRoot,
         );
     }
+}
 
+Modal.propTypes = {
+    onClose: PropTypes.func.isRequired,
 }
 
 export default Modal;

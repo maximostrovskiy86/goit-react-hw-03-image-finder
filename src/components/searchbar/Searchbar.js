@@ -1,5 +1,6 @@
 import React, {Component} from "react";
 import style from "./Searchbar.module.css";
+import PropTypes from 'prop-types';
 
 class Searchbar extends Component {
 
@@ -12,8 +13,6 @@ class Searchbar extends Component {
         this.setState({
             inputValue: value.toLowerCase(),
         })
-
-        // console.log('value: ' + value)
     }
 
     handleSubmit = (event) => {
@@ -41,8 +40,8 @@ class Searchbar extends Component {
                     <input
                         className={style.SearchFormInput}
                         type="text"
-                        // autocomplete="off"
-                        // autofocus
+                        autoComplete="off"
+                        autoFocus
                         placeholder="Search images and photos"
                         onChange={this.handleInput}
                         value={this.state.inputValue}
@@ -51,6 +50,10 @@ class Searchbar extends Component {
             </header>
         );
     }
+}
+
+Searchbar.propTypes = {
+    onSubmit: PropTypes.func.isRequired,
 }
 
 export default Searchbar;

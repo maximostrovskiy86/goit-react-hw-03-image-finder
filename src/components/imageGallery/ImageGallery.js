@@ -1,70 +1,61 @@
 import React, {Component} from "react";
 import style from "./ImageGallery.module.css";
+import "react-loader-spinner/dist/loader/css/react-spinner-loader.css";
+import PropTypes from 'prop-types';
 import ImageGalleryItem from "./imageGalleryItem/ImageGalleryItem";
 import Button from "../button/Button";
 import Modal from "../modal/Modal";
-// import Loader from "react-loader-spinner";
-// import "react-loader-spinner/dist/loader/css/react-spinner-loader.css";
-
-const BASE_URL = "https://pixabay.com/api/?";
-const API_KEY = "23297096-fdec21a8bcbab7faa251f0233";
+import imagesApi from "../../services/Api";
+import Loader from "react-loader-spinner";
 
 class ImageGallery extends Component {
 
     state = {
         gallery: [],
         page: 1,
-        // showModal: false,
+        showModal: false,
         largeImg: '',
+        error: null,
+        loading: false,
     }
 
     async componentDidUpdate(prevProp, prevState) {
 
         if (this.props.inputValue !== prevProp.inputValue) {
-            fetch(BASE_URL + `q=${this.props.inputValue}&page=1&key=${API_KEY}&image_type=photo&orientation=horizontal&per_page=12`)
-                .then(response => response.json())
-                .then(gallery => {
-                    // console.log(gallery)
-                    this.setState(prevState => ({
-                        gallery: gallery.hits,
-                        page: 1
-                    }))
-
-                    // this.setState(prev => {
-                    //     console.log(this.state.page)
-                    //     console.log(prev.page)
-                    // })
-                })
-
-            // if (result.data) {
-            //     const keys = Object.keys(result.data)
-            //     // console.log('keys: ' + keys)
-            //     console.log(keys)
-            //     const products = keys.map(key => ({
-            //         id: key,
-            //         ...response.data[key]
-            //     }))
-            //     // console.log(keys)
-            //     console.log(products)
-            //     // return products;
-            // }
+            this.setState({loading: true})
+            setTimeout(() => {
+                imagesApi
+                    .fetchQueryApi(this.props.inputValue)
+                    .then(gallery => {
+                        this.setState(prevState => ({
+                            gallery: gallery.hits,
+                            page: 1,
+                        }))
+                    })
+                    .catch(error => {
+                        console.log(error)
+                        this.setState({error})
+                    })
+                    .finally(() => this.setState({loading: false}))
+            }, 500)
         }
 
         if (this.state.page !== prevState.page && this.state.page !== 1) {
-            fetch(BASE_URL + `q=${this.props.inputValue}&page=${this.state.page}&key=${API_KEY}&image_type=photo&orientation=horizontal&per_page=12`)
-                .then(response => response.json())
-                .then(gallery => {
-                    this.setState(prevState => ({
-                        gallery: [...prevState.gallery, ...gallery.hits]
-                        // console.log(prevState.state.page)
+            this.setState({loading: true})
+            setTimeout(() => {
+                imagesApi
+                    .fetchLoadMore(this.props.inputValue, this.state.page)
+                    .then(gallery => {
+                        this.setState(prevState => ({
+                            gallery: [...prevState.gallery, ...gallery.hits]
+                        }))
+                    })
+                    .catch(error => {
+                        this.setState({error})
+                    })
+                    .finally(() => this.setState({loading: false}))
+            }, 500)
 
-                    }))
-                    // this.setState(prev => {
-                    //     // console.log([...prev.gallery, ...gallery.hits])
-                    //     console.log(this.state.page)
-                    //     console.log(prev.page)
-                    // })
-                })
         }
 
         if (this.state.gallery !== prevState.gallery) {
@@ -79,7 +70,6 @@ class ImageGallery extends Component {
         this.setState(prev => ({
             page: prev.page + 1,
         }))
-
     }
 
     toggleModal = () => {
@@ -88,49 +78,41 @@ class ImageGallery extends Component {
         }))
     }
 
-    findTargetImg = (e) => {
+    findCurrentImages = (e) => {
         const url = e.target.dataset.url;
         this.setState((prev) => ({
             showModal: !prev.showModal,
-            largeImg: url
+            largeImg: url,
         }));
     };
 
-
     render() {
-        const {gallery, showModal, largeImg} = this.state;
-        // console.log(largeImg)
-
+        const {gallery, showModal, largeImg, error, loading} = this.state;
         return (
             <main className={style.main}>
+                {error && <h2>Введите запрос ещё раз</h2>}
                 <ul className={style.ImageGallery}>
                     {gallery.map(image => <ImageGalleryItem
-                        src={image.webformatURL}
-                        alt={image.tags} key={image.id}
-                        modalUrl={image.largeImageURL}
-                        // largeImg={image.largeImageURL}
-                        onClickCurrentImage={this.findTargetImg}
-                        // onClose={this.toggleModal}
-                        // showModal={showModal}
-
-                    />
+                            src={image.webformatURL}
+                            alt={image.tags} key={image.id}
+                            modalUrl={image.largeImageURL}
+                            onClickCurrentImage={this.findCurrentImages}
+                        />
                     )}
                 </ul>
+                {loading && <Loader type="ThreeDots" color="#00BFFF" height={80} width={80}/>}
                 {showModal && <Modal onClose={this.toggleModal}>
-                    <img src={largeImg} alt=""/>
+                    <img src={largeImg} alt="Изображение"/>
                 </Modal>}
+                {gallery.length > 0 && <Button LoadMore={this.onLoadMore}/>}
 
-                <Button LoadMore={this.onLoadMore}/>
-                {/*<Loader*/}
-                {/*    type="Puff"*/}
-                {/*    color="#00BFFF"*/}
-                {/*    height={100}*/}
-                {/*    width={100}*/}
-                {/*    timeout={3000} //3 secs*/}
-                {/*/>*/}
             </main>
         );
     }
+}
+
+ImageGallery.propTypes = {
+    inputValue: PropTypes.string.isRequired,
 }
 
 export default ImageGallery;

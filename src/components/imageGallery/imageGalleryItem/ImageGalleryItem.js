@@ -1,8 +1,8 @@
 import React from "react";
 import style from "./ImageGalleryItem.module.css";
+import PropTypes from 'prop-types';
 
 const ImageGalleryItem = ({src, alt, modalUrl, onClickCurrentImage}) => {
-
     return (
         <>
             <li className={style.ImageGalleryItem}>
@@ -15,8 +15,14 @@ const ImageGalleryItem = ({src, alt, modalUrl, onClickCurrentImage}) => {
                 />
             </li>
         </>
-
     );
 }
 
-export default ImageGalleryItem;
+ImageGalleryItem.propTypes = {
+    src: PropTypes.string.isRequired,
+    alt: PropTypes.string.isRequired,
+    modalUrl: PropTypes.string.isRequired,
+    onClickCurrentImage: PropTypes.func.isRequired,
+}
+
+export default ImageGalleryItem
