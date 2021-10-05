@@ -1,5 +1,5 @@
 import React, {Component} from "react";
-import style from "./ImageGallery.module.css";
+import style from "./ImageGallery.module.scss";
 import "react-loader-spinner/dist/loader/css/react-spinner-loader.css";
 import PropTypes from 'prop-types';
 import ImageGalleryItem from "./imageGalleryItem/ImageGalleryItem";
@@ -19,51 +19,38 @@ class ImageGallery extends Component {
         loading: false,
     }
 
-    async componentDidUpdate(prevProp, prevState) {
-
-        if (this.props.inputValue !== prevProp.inputValue) {
-            this.setState({loading: true})
-            setTimeout(() => {
+    getImages = (inputValue, page) => {
+        this.setState({loading: true});
+        (!page ?
                 imagesApi
-                    .fetchQueryApi(this.props.inputValue)
-                    .then(gallery => {
-                        this.setState(prevState => ({
-                            gallery: gallery.hits,
-                            page: 1,
-                        }))
-                    })
-                    .catch(error => {
-                        console.log(error)
-                        this.setState({error})
-                    })
-                    .finally(() => this.setState({loading: false}))
-            }, 500)
-        }
-
-        if (this.state.page !== prevState.page && this.state.page !== 1) {
-            this.setState({loading: true})
-            setTimeout(() => {
+                    .fetchQueryApi(inputValue) :
                 imagesApi
-                    .fetchLoadMore(this.props.inputValue, this.state.page)
-                    .then(gallery => {
-                        this.setState(prevState => ({
-                            gallery: [...prevState.gallery, ...gallery.hits]
-                        }))
-                    })
-                    .catch(error => {
-                        this.setState({error})
-                    })
-                    .finally(() => this.setState({loading: false}))
-            }, 500)
+                    .fetchLoadMore(inputValue, page)
+        )
 
-        }
+            .then(gallery => !page ? this.setState(prevState => ({
+                    gallery: gallery.hits,
+                    page: 1,
+                })) : this.setState(prevState => ({
+                    gallery: [...prevState.gallery, ...gallery.hits]
+                }))
+            )
+            .catch(error => {
+                console.log(error)
+                this.setState({error})
+            })
+            .finally(() => {
+                this.setState({loading: false});
+                window.scrollTo({
+                    top: document.documentElement.scrollHeight,
+                    behavior: "smooth",
+                });
+            })
+    }
 
-        if (this.state.gallery !== prevState.gallery) {
-            window.scrollTo({
-                top: document.documentElement.scrollHeight,
-                behavior: "smooth",
-            });
-        }
+    componentDidUpdate = (prevProp, prevState) => {
+        if (this.props.inputValue !== prevProp.inputValue) this.getImages(this.props.inputValue);
+        if (this.state.page !== prevState.page && this.state.page !== 1) this.getImages(this.props.inputValue, this.state.page);
     }
 
     onLoadMore = () => {
@@ -78,11 +65,10 @@ class ImageGallery extends Component {
         }))
     }
 
-    findCurrentImages = (e) => {
-        const url = e.target.dataset.url;
+    findCurrentImages = (largeImg) => {
         this.setState((prev) => ({
             showModal: !prev.showModal,
-            largeImg: url,
+            largeImg,
         }));
     };
 
@@ -105,7 +91,6 @@ class ImageGallery extends Component {
                     <img src={largeImg} alt="Изображение"/>
                 </Modal>}
                 {gallery.length > 0 && <Button LoadMore={this.onLoadMore}/>}
-
             </main>
         );
     }

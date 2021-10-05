@@ -3,6 +3,9 @@ import style from "./ImageGalleryItem.module.css";
 import PropTypes from 'prop-types';
 
 const ImageGalleryItem = ({src, alt, modalUrl, onClickCurrentImage}) => {
+
+    const setLargeImage = () => onClickCurrentImage(modalUrl);
+
     return (
         <>
             <li className={style.ImageGalleryItem}>
@@ -10,8 +13,7 @@ const ImageGalleryItem = ({src, alt, modalUrl, onClickCurrentImage}) => {
                     src={src}
                     alt={alt}
                     className={style.ImageGalleryItemImage}
-                    data-url={modalUrl}
-                    onClick={onClickCurrentImage}
+                    onClick={setLargeImage}
                 />
             </li>
         </>
